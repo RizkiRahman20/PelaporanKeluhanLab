@@ -396,7 +396,7 @@
     <div class="navbar-inner">
         <a href="{{ route('mahasiswa.form') }}" class="navbar-brand">
             <img
-                src="{{ asset('images/logoict.jpg') }}"
+                src="{{ asset('images/logoict.jpeg') }}"
                 alt="Logo"
                 width="40"
                 height="40"
