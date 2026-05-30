@@ -7,6 +7,7 @@ use App\Models\Perbaikan;
 use App\Models\RiwayatPerbaikan;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -14,6 +15,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PerbaikanResource extends Resource
 {
@@ -32,6 +34,7 @@ class PerbaikanResource extends Resource
 
         return $user?->isAdminLab() || $user?->isSPV();
     }
+
 
     public static function getEloquentQuery(): Builder
     {
@@ -52,6 +55,16 @@ class PerbaikanResource extends Resource
                 $query->whereIn('id_lab', $labIds);
             });
         }
+
+        if ($user?->isSPV() && ! $user->isSPVKedisiplinan()) {
+        $labIds = $user->penugasanUserLabs()
+            ->where('status_aktif', 'aktif')
+            ->pluck('id_lab');
+
+        $query->whereHas('laporan', function (Builder $query) use ($labIds) {
+            $query->whereIn('id_lab', $labIds);
+        });
+    }
 
         return $query;
     }
@@ -105,6 +118,18 @@ class PerbaikanResource extends Resource
                 Tables\Columns\TextColumn::make('laporan.nm_pelapor')
                     ->label('Pelapor')
                     ->searchable(),
+
+                Tables\Columns\ImageColumn::make('laporan.file_foto')
+                    ->label('Gambar')
+                    ->disk('public')
+                    ->size(64)
+                    ->square()
+                    ->url(
+                        fn (?string $state): ?string => $state
+                            ? Storage::disk('public')->url($state)
+                            : null,
+                        true,
+                    ),
 
                 Tables\Columns\TextColumn::make('laporan.kategori')
                     ->label('Kategori')
@@ -183,34 +208,135 @@ class PerbaikanResource extends Resource
                     ->icon('heroicon-o-eye')
                     ->color('gray')
                     ->modalHeading('Detail Keluhan')
+                    ->modalWidth('4xl')
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Tutup')
-                    ->form([
-                        Forms\Components\TextInput::make('no_laporan')
-                            ->label('No. Laporan')
-                            ->default(fn (Perbaikan $record) => $record->id_laporan)
-                            ->disabled(),
+                    ->infolist([
+                        Infolists\Components\Section::make('Informasi Laporan')
+                            ->columns(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('id_laporan')
+                                    ->label('No. Laporan')
+                                    ->copyable(),
 
-                        Forms\Components\TextInput::make('lab')
-                            ->label('Laboratorium')
-                            ->default(fn (Perbaikan $record) => $record->laporan?->lab?->nm_lab ?? '-')
-                            ->disabled(),
+                                Infolists\Components\TextEntry::make('laporan.kategori')
+                                    ->label('Kategori')
+                                    ->badge()
+                                    ->color(fn (?string $state): string => match ($state) {
+                                        'PC' => 'warning',
+                                        'non_PC' => 'info',
+                                        default => 'gray',
+                                    }),
 
-                        Forms\Components\TextInput::make('pelapor')
-                            ->label('Pelapor')
-                            ->default(fn (Perbaikan $record) => $record->laporan?->nm_pelapor ?? '-')
-                            ->disabled(),
+                                Infolists\Components\TextEntry::make('status_perbaikan')
+                                    ->label('Status Perbaikan')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                        'antrean' => 'Antrean',
+                                        'dikerjakan' => 'Dikerjakan',
+                                        'menunggu_sparepart' => 'Menunggu Sparepart',
+                                        'selesai' => 'Selesai',
+                                        default => $state ?? '-',
+                                    })
+                                    ->color(fn (?string $state): string => match ($state) {
+                                        'antrean' => 'gray',
+                                        'dikerjakan' => 'warning',
+                                        'menunggu_sparepart' => 'info',
+                                        'selesai' => 'success',
+                                        default => 'gray',
+                                    }),
 
-                        Forms\Components\TextInput::make('kategori')
-                            ->label('Kategori')
-                            ->default(fn (Perbaikan $record) => $record->laporan?->kategori ?? '-')
-                            ->disabled(),
+                                Infolists\Components\TextEntry::make('app_validasi')
+                                    ->label('Validasi SPV')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                        'menunggu' => 'Menunggu',
+                                        'divalidasi' => 'Divalidasi',
+                                        'dikembalikan' => 'Dikembalikan',
+                                        default => $state ?? '-',
+                                    })
+                                    ->color(fn (?string $state): string => match ($state) {
+                                        'menunggu' => 'gray',
+                                        'divalidasi' => 'success',
+                                        'dikembalikan' => 'danger',
+                                        default => 'gray',
+                                    }),
+                            ]),
 
-                        Forms\Components\Textarea::make('catatan_laporan')
-                            ->label('Catatan Keluhan')
-                            ->default(fn (Perbaikan $record) => $record->laporan?->catatan_lpr ?? '-')
-                            ->disabled()
-                            ->columnSpanFull(),
+                        Infolists\Components\Section::make('Pelapor dan Lokasi')
+                            ->columns(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('laporan.nm_pelapor')
+                                    ->label('Pelapor')
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('laporan.nim_pelapor')
+                                    ->label('NIM')
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('laporan.fakultas_pelapor')
+                                    ->label('Fakultas/Program Studi')
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('laporan.lab.nm_lab')
+                                    ->label('Laboratorium')
+                                    ->placeholder('-'),
+                            ]),
+
+                        Infolists\Components\Section::make('Keluhan Pelapor')
+                            ->schema([
+                                Infolists\Components\TextEntry::make('laporan.catatan_lpr')
+                                    ->label('Catatan Keluhan')
+                                    ->placeholder('-')
+                                    ->prose()
+                                    ->columnSpanFull(),
+
+                                Infolists\Components\ImageEntry::make('laporan.file_foto')
+                                    ->label('Gambar Keluhan Pelapor')
+                                    ->disk('public')
+                                    ->height(220)
+                                    ->placeholder('Tidak ada gambar')
+                                    ->url(
+                                        fn (?string $state): ?string => $state
+                                            ? Storage::disk('public')->url($state)
+                                            : null,
+                                        true,
+                                    )
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Infolists\Components\Section::make('Perbaikan')
+                            ->columns(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('tgl_mulai')
+                                    ->label('Tanggal Mulai')
+                                    ->date('d/m/Y')
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('tgl_selesai')
+                                    ->label('Tanggal Selesai')
+                                    ->date('d/m/Y')
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('catatan_pbk')
+                                    ->label('Catatan Perbaikan')
+                                    ->placeholder('-')
+                                    ->prose()
+                                    ->columnSpanFull(),
+
+                                Infolists\Components\ImageEntry::make('ft_perbaikan')
+                                    ->label('Bukti Perbaikan')
+                                    ->disk('public')
+                                    ->height(220)
+                                    ->placeholder('Belum ada bukti perbaikan')
+                                    ->url(
+                                        fn (?string $state): ?string => $state
+                                            ? Storage::disk('public')->url($state)
+                                            : null,
+                                        true,
+                                    )
+                                    ->columnSpanFull(),
+                            ]),
                     ]),
 
                 Action::make('update_status')
@@ -302,6 +428,72 @@ class PerbaikanResource extends Resource
                             ->success()
                             ->send();
                     }),
+                    Action::make('validasi_spv')
+    ->label('Validasi')
+    ->icon('heroicon-o-check-badge')
+    ->color('success')
+    ->visible(fn ($record): bool =>
+        Auth::user()?->isSPV()
+        && $record->status_perbaikan === 'selesai'
+        && $record->app_validasi === 'menunggu'
+    )
+    ->requiresConfirmation()
+    ->modalHeading('Validasi Perbaikan')
+    ->modalDescription('Pastikan bukti dan hasil perbaikan sudah benar.')
+    ->action(function ($record): void {
+        $record->update([
+            'app_validasi' => 'divalidasi',
+        ]);
+
+        RiwayatPerbaikan::create([
+            'tgl_ubah' => now()->toDateString(),
+            'catatan_rw' => 'Perbaikan divalidasi oleh SPV.',
+            'id_perbaikan' => $record->id_perbaikan,
+        ]);
+
+        Notification::make()
+            ->title('Perbaikan berhasil divalidasi.')
+            ->success()
+            ->send();
+    }),
+
+Action::make('kembalikan_spv')
+    ->label('Kembalikan')
+    ->icon('heroicon-o-arrow-uturn-left')
+    ->color('danger')
+    ->visible(fn ($record): bool =>
+        Auth::user()?->isSPV()
+        && $record->status_perbaikan === 'selesai'
+        && $record->app_validasi === 'menunggu'
+    )
+    ->form([
+        \Filament\Forms\Components\Textarea::make('alasan')
+            ->label('Alasan Dikembalikan')
+            ->required()
+            ->maxLength(2000)
+            ->columnSpanFull(),
+    ])
+    ->requiresConfirmation()
+    ->modalHeading('Kembalikan Perbaikan')
+    ->modalDescription('Status perbaikan akan dikembalikan ke dikerjakan.')
+    ->action(function ($record, array $data): void {
+        $record->update([
+            'status_perbaikan' => 'dikerjakan',
+            'app_validasi' => 'dikembalikan',
+            'alasan_penolakan' => $data['alasan'],
+        ]);
+
+        RiwayatPerbaikan::create([
+            'tgl_ubah' => now()->toDateString(),
+            'catatan_rw' => 'Perbaikan dikembalikan oleh SPV. Alasan: ' . $data['alasan'],
+            'id_perbaikan' => $record->id_perbaikan,
+        ]);
+
+        Notification::make()
+            ->title('Perbaikan dikembalikan ke admin.')
+            ->warning()
+            ->send();
+    }),
             ])
             ->defaultSort('created_at', 'desc');
     }

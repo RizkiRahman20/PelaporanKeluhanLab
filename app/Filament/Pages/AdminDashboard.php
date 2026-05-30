@@ -13,11 +13,13 @@ class AdminDashboard extends Page
     protected static ?string $navigationLabel = 'Dashboard Admin';
     protected static ?int $navigationSort = 0;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string $view = 'filament.pages.admin-dashboard';
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->isAdminLab() ?? false;
+        return in_array(Auth::user()?->role_user, ['admin_lab', 'asisten_lab'], true);
     }
 
     protected function getAssignedLabIds()
