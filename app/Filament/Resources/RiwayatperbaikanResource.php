@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RiwayatPerbaikanResource\Pages;
+use App\Models\Lab;
 use App\Models\RiwayatPerbaikan;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -15,7 +17,7 @@ class RiwayatPerbaikanResource extends Resource
     protected static ?string $model = RiwayatPerbaikan::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
-    protected static ?string $navigationGroup = 'Perbaikan';
+    protected static ?string $navigationGroup = 'Monitoring';
     protected static ?string $navigationLabel = 'Riwayat Perbaikan';
     protected static ?string $label = 'Riwayat Perbaikan';
     protected static ?string $pluralLabel = 'Riwayat Perbaikan';
@@ -33,11 +35,22 @@ class RiwayatPerbaikanResource extends Resource
         $query = parent::getEloquentQuery()
             ->with([
                 'perbaikan.laporan.lab',
+                'perbaikan.laporan.penugasan.user',
             ]);
 
         $user = Auth::user();
 
         if ($user?->isAdminLab()) {
+            $labIds = $user->penugasanUserLabs()
+                ->where('status_aktif', 'aktif')
+                ->pluck('id_lab');
+
+            $query->whereHas('perbaikan.laporan', function (Builder $query) use ($labIds) {
+                $query->whereIn('id_lab', $labIds);
+            });
+        }
+
+        if ($user?->isSPV() && ! $user->isSPVKedisiplinan()) {
             $labIds = $user->penugasanUserLabs()
                 ->where('status_aktif', 'aktif')
                 ->pluck('id_lab');
@@ -60,6 +73,10 @@ class RiwayatPerbaikanResource extends Resource
 
                 Tables\Columns\TextColumn::make('perbaikan.laporan.lab.nm_lab')
                     ->label('Lab')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('perbaikan.laporan.nm_pelapor')
+                    ->label('Pelapor')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('tgl_ubah')
@@ -85,12 +102,41 @@ class RiwayatPerbaikanResource extends Resource
                         default => 'gray',
                     }),
 
+                Tables\Columns\TextColumn::make('perbaikan.app_validasi')
+                    ->label('Validasi SPV')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'menunggu' => 'Menunggu',
+                        'divalidasi' => 'Divalidasi',
+                        'dikembalikan' => 'Dikembalikan',
+                        default => $state ?? '-',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        'menunggu' => 'gray',
+                        'divalidasi' => 'success',
+                        'dikembalikan' => 'danger',
+                        default => 'gray',
+                    }),
+
                 Tables\Columns\TextColumn::make('catatan_rw')
                     ->label('Catatan')
                     ->limit(80)
                     ->wrap(),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('id_lab')
+                    ->label('Lab')
+                    ->options(fn () => Lab::where('status_lab', 'aktif')->pluck('nm_lab', 'id_lab'))
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (blank($data['value'] ?? null)) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('perbaikan.laporan', function (Builder $query) use ($data) {
+                            $query->where('id_lab', $data['value']);
+                        });
+                    }),
+
                 Tables\Filters\Filter::make('tanggal')
                     ->form([
                         Forms\Components\DatePicker::make('dari')
