@@ -129,7 +129,8 @@ class PerbaikanResource extends Resource
                             ? Storage::disk('public')->url($state)
                             : null,
                         true,
-                    ),
+                    )
+                    ->placeholder('-'),
 
                 Tables\Columns\TextColumn::make('laporan.kategori')
                     ->label('Kategori')
