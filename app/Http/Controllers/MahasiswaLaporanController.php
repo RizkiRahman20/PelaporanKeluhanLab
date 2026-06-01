@@ -12,7 +12,9 @@ class MahasiswaLaporanController extends Controller
     // GET / — Halaman beranda dengan form laporan
     public function index()
     {
-        $labs = Lab::where('status_lab', 'aktif')->orderBy('nm_lab')->get();
+        $labs = Lab::where('status_lab', 'aktif')
+        ->orderByRaw('CAST(REGEXP_REPLACE(kd_lab, "[^0-9]", "") AS UNSIGNED)')
+        ->get();
         return view('mahasiswa.form', compact('labs'));
     }
 
@@ -121,7 +123,9 @@ class MahasiswaLaporanController extends Controller
         $semuaLaporan = $query->paginate(10)->withQueryString();
 
         // List lab untuk dropdown filter
-        $labs = Lab::where('status_lab', 'aktif')->orderBy('nm_lab')->get();
+        $labs = Lab::where('status_lab', 'aktif')
+        ->orderByRaw('CAST(REGEXP_REPLACE(kd_lab, "[^0-9]", "") AS UNSIGNED)')
+        ->get();
 
         return view('mahasiswa.status', compact(
             'laporan',
