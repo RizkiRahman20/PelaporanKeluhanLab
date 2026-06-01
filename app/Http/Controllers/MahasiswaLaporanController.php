@@ -22,24 +22,36 @@ class MahasiswaLaporanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nim_pelapor'      => 'required|string|max:20',
-            'nm_pelapor'       => 'required|string|max:100',
-            'fakultas_pelapor' => 'required|string|max:100',
-            'id_lab'           => 'required|exists:labs,id_lab',
-            'kategori'         => 'required|in:PC,non_PC',
-            'catatan_lpr'      => 'required|string|min:10',
-            'file_foto'        => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'nim_pelapor'      => ['required', 'regex:/^[0-9]{10}$/'],
+            'nm_pelapor'       => ['required', 'regex:/^[\pL\s]+$/u', 'max:100'],
+            'fakultas_pelapor' => ['required', 'regex:/^[\pL\s]+$/u', 'max:100'],
+
+            'id_lab'           => ['required', 'exists:labs,id_lab'],
+            'kategori'         => ['required', 'in:PC,non_PC'],
+            'catatan_lpr'      => ['required', 'string', 'min:10'],
+            'file_foto'        => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ], [
-            'nim_pelapor.required'      => 'NIM wajib diisi.',
-            'nm_pelapor.required'       => 'Nama lengkap wajib diisi.',
+            'nim_pelapor.required' => 'NIM wajib diisi.',
+            'nim_pelapor.regex'    => 'NIM harus terdiri dari tepat 10 angka. Contoh: 2511501500.',
+
+            'nm_pelapor.required' => 'Nama lengkap wajib diisi.',
+            'nm_pelapor.regex'    => 'Nama lengkap hanya boleh berisi huruf dan spasi.',
+
             'fakultas_pelapor.required' => 'Fakultas wajib diisi.',
-            'id_lab.required'           => 'Pilih laboratorium terlebih dahulu.',
-            'id_lab.exists'             => 'Laboratorium tidak valid.',
-            'kategori.required'         => 'Kategori kerusakan wajib dipilih.',
-            'catatan_lpr.required'      => 'Deskripsi keluhan wajib diisi.',
-            'catatan_lpr.min'           => 'Deskripsi keluhan minimal 10 karakter.',
-            'file_foto.image'           => 'File harus berupa gambar.',
-            'file_foto.max'             => 'Ukuran foto maksimal 2MB.',
+            'fakultas_pelapor.regex'    => 'Fakultas hanya boleh berisi huruf dan spasi.',
+
+            // Kalau ada field program studi
+            // 'prodi_pelapor.required' => 'Program studi wajib diisi.',
+            // 'prodi_pelapor.regex'    => 'Program studi hanya boleh berisi huruf dan spasi.',
+
+            'id_lab.required'   => 'Pilih laboratorium terlebih dahulu.',
+            'id_lab.exists'     => 'Laboratorium tidak valid.',
+            'kategori.required' => 'Kategori kerusakan wajib dipilih.',
+            'catatan_lpr.required' => 'Deskripsi keluhan wajib diisi.',
+            'catatan_lpr.min'      => 'Deskripsi keluhan minimal 10 karakter.',
+            'file_foto.image'      => 'File harus berupa gambar.',
+            'file_foto.mimes'      => 'Foto harus berformat jpg, jpeg, atau png.',
+            'file_foto.max'        => 'Ukuran foto maksimal 2MB.',
         ]);
 
         // Cari penugasan SPV aktif di lab yang dilaporkan

@@ -306,7 +306,11 @@
                     <label class="form-label">NIM <span>*</span></label>
                     <input type="text" name="nim_pelapor" value="{{ old('nim_pelapor') }}"
                            class="form-input {{ $errors->has('nim_pelapor') ? 'is-error' : '' }}"
-                           placeholder="Contoh: 10231010" required>
+                           maxlength="10"
+                           inputmode="numeric"
+                           pattern="[0-9]{10}" 
+                           placeholder="Contoh: 2511500600"
+                           required>
                     @error('nim_pelapor')
                         <span class="form-error">{{ $message }}</span>
                     @enderror
