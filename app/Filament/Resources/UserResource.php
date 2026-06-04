@@ -19,9 +19,9 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationGroup = 'Master Data';
-    protected static ?string $navigationLabel = 'Manajemen User';
+    protected static ?string $navigationLabel = 'Data Pengguna';
     protected static ?string $label = 'User';
-    protected static ?string $pluralLabel = 'Manajemen User';
+    protected static ?string $pluralLabel = 'Data Pengguna';
     protected static ?int $navigationSort = 2;
 
     public static function canAccess(): bool
@@ -96,12 +96,14 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('nm_user')
                     ->label('Nama')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn ($record): string => $record->email),
 
-                Tables\Columns\TextColumn::make('email')
-                    ->label('Email')
-                    ->searchable()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('email')
+                //     ->label('Email')
+                //     ->searchable()
+                //     ->sortable(),
 
                 Tables\Columns\TextColumn::make('role_user')
                     ->label('Role')

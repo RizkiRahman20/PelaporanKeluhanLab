@@ -15,7 +15,7 @@ class LabResource extends Resource
 {
     protected static ?string $model = Lab::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-library';
+    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?string $navigationGroup = 'Master Data';
     protected static ?string $navigationLabel = 'Manajemen Lab';
     protected static ?string $label = 'Laboratorium';
@@ -75,7 +75,9 @@ class LabResource extends Resource
                 Tables\Columns\TextColumn::make('nm_lab')
                     ->label('Nama Lab')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn ($record) => $record->keterangan ?: 'Tidak ada keterangan'),
 
                 Tables\Columns\TextColumn::make('status_lab')
                     ->label('Status')
@@ -90,6 +92,12 @@ class LabResource extends Resource
                         'nonaktif' => 'danger',
                         default => 'gray',
                     }),
+
+                    Tables\Columns\TextColumn::make('laporan_keluhans_count')
+                    ->label('Jumlah Laporan')
+                    ->counts('laporanKeluhans')
+                    ->badge()
+                    ->color('primary'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')

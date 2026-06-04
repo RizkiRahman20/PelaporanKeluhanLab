@@ -31,6 +31,10 @@ class AdminPanelProvider extends PanelProvider
             ->login(Login::class)
             ->colors([
                 'primary' => Color::Blue,
+                'success' => Color::Green,
+                'warning' => Color::Amber,
+                'danger' => Color::Red,
+                'gray' => Color::Slate,
             ])
             ->navigationGroups([
                 'Laporan',

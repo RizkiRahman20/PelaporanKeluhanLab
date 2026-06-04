@@ -388,7 +388,7 @@
                     <label class="form-label">Deskripsi Keluhan <span>*</span></label>
                     <textarea name="catatan_lpr"
                               class="form-textarea {{ $errors->has('catatan_lpr') ? 'is-error' : '' }}"
-                              placeholder="Jelaskan detail kerusakan atau keluhan yang dialami. Contoh: PC nomor 5 tidak bisa menyala, monitor berkedip, dll."
+                              placeholder="Jelaskan detail kerusakan atau keluhan yang dialami. Contoh: PC nomor 5 tidak bisa menyala, monitor berkedip, dll (Sertakan juga nomor pc, jika memang yang kendala adalah pc)."
                               required>{{ old('catatan_lpr') }}</textarea>
                     @error('catatan_lpr')
                         <span class="form-error">{{ $message }}</span>

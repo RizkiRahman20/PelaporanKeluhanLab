@@ -8,6 +8,7 @@ use App\Models\PenugasanUserLab;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -46,6 +47,73 @@ class PenugasanUserLabResource extends Resource
         };
     }
 
+    protected static function roleColor(?string $role): string
+    {
+        return match (true) {
+            str_starts_with($role ?? '', 'spv_') => 'danger',
+            $role === 'admin_lab' => 'warning',
+            $role === 'asisten_lab' => 'success',
+            $role === 'calon_asisten' => 'gray',
+            default => 'gray',
+        };
+    }
+
+    protected static function roleIcon(?string $role): string
+    {
+        return match (true) {
+            str_starts_with($role ?? '', 'spv_') => 'heroicon-o-shield-check',
+            $role === 'admin_lab' => 'heroicon-o-wrench-screwdriver',
+            $role === 'asisten_lab' => 'heroicon-o-user-group',
+            $role === 'calon_asisten' => 'heroicon-o-user',
+            default => 'heroicon-o-question-mark-circle',
+        };
+    }
+
+    protected static function semesterLabel(?string $semester): string
+    {
+        return match ($semester) {
+            'ganjil' => 'Ganjil',
+            'genap' => 'Genap',
+            default => $semester ?? '-',
+        };
+    }
+
+    protected static function semesterColor(?string $semester): string
+    {
+        return match ($semester) {
+            'ganjil' => 'info',
+            'genap' => 'success',
+            default => 'gray',
+        };
+    }
+
+    protected static function statusLabel(?string $status): string
+    {
+        return match ($status) {
+            'aktif' => 'Aktif',
+            'nonaktif' => 'Nonaktif',
+            default => $status ?? '-',
+        };
+    }
+
+    protected static function statusColor(?string $status): string
+    {
+        return match ($status) {
+            'aktif' => 'success',
+            'nonaktif' => 'danger',
+            default => 'gray',
+        };
+    }
+
+    protected static function statusIcon(?string $status): string
+    {
+        return match ($status) {
+            'aktif' => 'heroicon-o-check-circle',
+            'nonaktif' => 'heroicon-o-x-circle',
+            default => 'heroicon-o-question-mark-circle',
+        };
+    }
+
     protected static function userOptions(): array
     {
         return User::query()
@@ -79,19 +147,26 @@ class PenugasanUserLabResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Data Penugasan')
-                    ->description('Gunakan form ini untuk menempatkan SPV, admin lab, asisten lab, atau calon asisten ke laboratorium tertentu.')
+                    ->description('Tempatkan SPV, admin lab, asisten lab, atau calon asisten ke laboratorium tertentu.')
+                    ->icon('heroicon-o-clipboard-document-list')
                     ->columns(2)
                     ->schema([
                         Forms\Components\Select::make('id_user')
                             ->label('User')
+                            ->helperText('Pilih user aktif yang akan diberikan penugasan.')
                             ->options(fn () => self::userOptions())
                             ->searchable()
+                            ->preload()
+                            ->native(false)
                             ->required(),
 
                         Forms\Components\Select::make('id_lab')
                             ->label('Laboratorium')
+                            ->helperText('Pilih laboratorium aktif untuk penugasan user.')
                             ->options(fn () => self::labOptions())
                             ->searchable()
+                            ->preload()
+                            ->native(false)
                             ->required(),
 
                         Forms\Components\Select::make('semester')
@@ -100,11 +175,13 @@ class PenugasanUserLabResource extends Resource
                                 'ganjil' => 'Ganjil',
                                 'genap' => 'Genap',
                             ])
+                            ->native(false)
                             ->required(),
 
                         Forms\Components\TextInput::make('tahun_ajaran')
                             ->label('Tahun Ajaran')
                             ->placeholder('Contoh: 2025/2026')
+                            ->helperText('Gunakan format tahun ajaran, misalnya 2025/2026.')
                             ->required()
                             ->maxLength(10),
 
@@ -115,7 +192,9 @@ class PenugasanUserLabResource extends Resource
                                 'nonaktif' => 'Nonaktif',
                             ])
                             ->default('aktif')
-                            ->required(),
+                            ->native(false)
+                            ->required()
+                            ->columnSpanFull(),
                     ]),
             ]);
     }
@@ -126,67 +205,76 @@ class PenugasanUserLabResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('user.nm_user')
                     ->label('Nama User')
+                    ->icon('heroicon-o-user')
+                    ->weight('medium')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->description(fn (PenugasanUserLab $record): ?string =>
+                        $record->user?->email
+                            ? $record->user->email
+                            : null
+                    ),
 
                 Tables\Columns\TextColumn::make('user.role_user')
                     ->label('Role')
                     ->badge()
+                    ->icon(fn (?string $state): string => self::roleIcon($state))
                     ->formatStateUsing(fn (?string $state): string => self::roleLabel($state))
-                    ->color(fn (?string $state): string => match (true) {
-                        str_starts_with($state ?? '', 'spv_') => 'danger',
-                        $state === 'admin_lab' => 'warning',
-                        $state === 'asisten_lab' => 'success',
-                        $state === 'calon_asisten' => 'gray',
-                        default => 'gray',
-                    }),
+                    ->color(fn (?string $state): string => self::roleColor($state)),
+
+                Tables\Columns\TextColumn::make('lab.nm_lab')
+                    ->label('Laboratorium')
+                    ->icon('heroicon-o-building-office-2')
+                    ->weight('medium')
+                    ->searchable()
+                    ->sortable()
+                    ->description(fn (PenugasanUserLab $record): ?string =>
+                        $record->lab?->kd_lab
+                            ? 'Kode Lab: ' . $record->lab->kd_lab
+                            : null
+                    ),
 
                 Tables\Columns\TextColumn::make('lab.kd_lab')
                     ->label('Kode Lab')
+                    ->badge()
+                    ->color('gray')
                     ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('lab.nm_lab')
-                    ->label('Nama Lab')
-                    ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('semester')
                     ->label('Semester')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'ganjil' => 'Ganjil',
-                        'genap' => 'Genap',
-                        default => $state ?? '-',
-                    })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'ganjil' => 'info',
-                        'genap' => 'success',
-                        default => 'gray',
-                    }),
+                    ->icon('heroicon-o-academic-cap')
+                    ->formatStateUsing(fn (?string $state): string => self::semesterLabel($state))
+                    ->color(fn (?string $state): string => self::semesterColor($state)),
 
                 Tables\Columns\TextColumn::make('tahun_ajaran')
                     ->label('Tahun Ajaran')
+                    ->icon('heroicon-o-calendar-days')
+                    ->badge()
+                    ->color('primary')
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status_aktif')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'aktif' => 'Aktif',
-                        'nonaktif' => 'Nonaktif',
-                        default => $state ?? '-',
-                    })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'aktif' => 'success',
-                        'nonaktif' => 'danger',
-                        default => 'gray',
-                    }),
+                    ->icon(fn (?string $state): string => self::statusIcon($state))
+                    ->formatStateUsing(fn (?string $state): string => self::statusLabel($state))
+                    ->color(fn (?string $state): string => self::statusColor($state)),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')
-                    ->dateTime('d/m/Y H:i')
+                    ->icon('heroicon-o-clock')
+                    ->dateTime('d M Y, H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Diperbarui')
+                    ->icon('heroicon-o-arrow-path')
+                    ->dateTime('d M Y, H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -194,12 +282,14 @@ class PenugasanUserLabResource extends Resource
                 Tables\Filters\SelectFilter::make('id_user')
                     ->label('User')
                     ->options(fn () => self::userOptions())
-                    ->searchable(),
+                    ->searchable()
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('id_lab')
                     ->label('Laboratorium')
                     ->options(fn () => self::labOptions())
-                    ->searchable(),
+                    ->searchable()
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('semester')
                     ->label('Semester')
@@ -215,8 +305,104 @@ class PenugasanUserLabResource extends Resource
                         'nonaktif' => 'Nonaktif',
                     ]),
             ])
+            ->filtersFormColumns(2)
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('detail')
+                    ->label('Detail')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->slideOver()
+                    ->modalHeading('Detail Penugasan User Lab')
+                    ->modalWidth('4xl')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->infolist([
+                        Infolists\Components\Section::make('Informasi User')
+                            ->description('Data user yang mendapatkan penugasan.')
+                            ->icon('heroicon-o-user')
+                            ->columns(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('user.nm_user')
+                                    ->label('Nama User')
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('user.email')
+                                    ->label('Email')
+                                    ->copyable()
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('user.role_user')
+                                    ->label('Role')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => self::roleLabel($state))
+                                    ->color(fn (?string $state): string => self::roleColor($state)),
+
+                                Infolists\Components\TextEntry::make('user.status_aktif')
+                                    ->label('Status User')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => self::statusLabel($state))
+                                    ->color(fn (?string $state): string => self::statusColor($state)),
+                            ]),
+
+                        Infolists\Components\Section::make('Informasi Laboratorium')
+                            ->description('Laboratorium yang ditugaskan kepada user.')
+                            ->icon('heroicon-o-building-office-2')
+                            ->columns(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('lab.kd_lab')
+                                    ->label('Kode Lab')
+                                    ->badge()
+                                    ->color('gray')
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('lab.nm_lab')
+                                    ->label('Nama Lab')
+                                    ->placeholder('-'),
+
+                                Infolists\Components\TextEntry::make('lab.status_lab')
+                                    ->label('Status Lab')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => self::statusLabel($state))
+                                    ->color(fn (?string $state): string => self::statusColor($state)),
+
+                                Infolists\Components\TextEntry::make('lab.keterangan')
+                                    ->label('Keterangan')
+                                    ->placeholder('-')
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Infolists\Components\Section::make('Periode Penugasan')
+                            ->description('Semester, tahun ajaran, dan status penugasan.')
+                            ->icon('heroicon-o-calendar-days')
+                            ->columns(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('semester')
+                                    ->label('Semester')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => self::semesterLabel($state))
+                                    ->color(fn (?string $state): string => self::semesterColor($state)),
+
+                                Infolists\Components\TextEntry::make('tahun_ajaran')
+                                    ->label('Tahun Ajaran')
+                                    ->badge()
+                                    ->color('primary'),
+
+                                Infolists\Components\TextEntry::make('status_aktif')
+                                    ->label('Status Penugasan')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => self::statusLabel($state))
+                                    ->color(fn (?string $state): string => self::statusColor($state)),
+
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label('Dibuat')
+                                    ->dateTime('d M Y, H:i'),
+                            ]),
+                    ]),
+
+                Tables\Actions\EditAction::make()
+                    ->label('Edit')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning'),
 
                 Tables\Actions\Action::make('nonaktifkan')
                     ->label('Nonaktifkan')
@@ -224,8 +410,11 @@ class PenugasanUserLabResource extends Resource
                     ->color('danger')
                     ->visible(fn (PenugasanUserLab $record): bool => $record->status_aktif === 'aktif')
                     ->requiresConfirmation()
+                    ->modalIcon('heroicon-o-x-circle')
+                    ->modalIconColor('danger')
                     ->modalHeading('Nonaktifkan Penugasan')
-                    ->modalDescription('Penugasan ini akan dinonaktifkan, bukan dihapus.')
+                    ->modalDescription('Penugasan ini akan dinonaktifkan, bukan dihapus dari database.')
+                    ->modalSubmitActionLabel('Ya, nonaktifkan')
                     ->action(function (PenugasanUserLab $record): void {
                         $record->update([
                             'status_aktif' => 'nonaktif',
@@ -243,8 +432,11 @@ class PenugasanUserLabResource extends Resource
                     ->color('success')
                     ->visible(fn (PenugasanUserLab $record): bool => $record->status_aktif === 'nonaktif')
                     ->requiresConfirmation()
+                    ->modalIcon('heroicon-o-check-circle')
+                    ->modalIconColor('success')
                     ->modalHeading('Aktifkan Penugasan')
                     ->modalDescription('Penugasan ini akan diaktifkan kembali.')
+                    ->modalSubmitActionLabel('Ya, aktifkan')
                     ->action(function (PenugasanUserLab $record): void {
                         $record->update([
                             'status_aktif' => 'aktif',
@@ -260,7 +452,12 @@ class PenugasanUserLabResource extends Resource
                     ->visible(false),
             ])
             ->bulkActions([])
-            ->defaultSort('created_at', 'desc');
+            ->emptyStateIcon('heroicon-o-clipboard-document-list')
+            ->emptyStateHeading('Belum ada penugasan user lab')
+            ->emptyStateDescription('Tambahkan penugasan untuk menghubungkan user dengan laboratorium tertentu.')
+            ->defaultSort('created_at', 'desc')
+            ->defaultPaginationPageOption(10)
+            ->paginated([10, 25, 50, 100]);
     }
 
     public static function getPages(): array
