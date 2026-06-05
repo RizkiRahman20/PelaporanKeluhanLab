@@ -27,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('dashboard')
+            ->brandLogo(fn() => view('filament.logo'))
             ->login()
             ->colors([
                 'primary' => Color::Blue,
