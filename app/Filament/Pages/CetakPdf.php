@@ -51,6 +51,6 @@ class CetakPdf extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->isSPV() ?? false;
+        return Auth::user()?->isSPV() || Auth::user()?->isAdminLab() ?? false;
     }
 }
