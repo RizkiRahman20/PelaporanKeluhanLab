@@ -36,10 +36,11 @@ class User extends Authenticatable implements FilamentUser, HasName
         ];
     }
 
-    public function getFilamentName(): string 
+    public function getFilamentName(): string
     {
         return $this->nm_user ?? 'User';
     }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->status_aktif === 'aktif';
