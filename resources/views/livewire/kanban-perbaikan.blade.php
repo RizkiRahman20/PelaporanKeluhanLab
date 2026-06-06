@@ -1,4 +1,24 @@
-<div class="kanban-wrapper" x-data="{ draggedId: null }">
+<div
+    class="kanban-wrapper"
+    x-data="{
+        draggedId: null,
+        toast: {
+            show: false,
+            type: 'success',
+            message: '',
+        },
+        showToast(type, message) {
+            this.toast.type = type;
+            this.toast.message = message;
+            this.toast.show = true;
+
+            setTimeout(() => {
+                this.toast.show = false;
+            }, 2500);
+        }
+    }"
+    x-on:kanban-notify.window="showToast($event.detail.type, $event.detail.message)"
+>
     <style>
         .kanban-wrapper {
             width: 100%;
@@ -19,6 +39,37 @@
             background: #0b1020;
             border-color: rgba(255, 255, 255, 0.10);
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.30);
+        }
+
+        .kanban-toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            min-width: 260px;
+            max-width: 360px;
+            border-radius: 14px;
+            padding: 14px 16px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+        }
+
+        .kanban-toast.success {
+            background: #16a34a;
+        }
+
+        .kanban-toast.warning {
+            background: #f59e0b;
+        }
+
+        .kanban-toast.info {
+            background: #2563eb;
+        }
+
+        .kanban-toast.error {
+            background: #dc2626;
         }
 
         .kanban-subtitle {
@@ -335,6 +386,20 @@
             grid-column: span 2;
         }
 
+        .kanban-detail-image {
+            width: 100%;
+            max-height: 360px;
+            object-fit: contain;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: #f8fafc;
+        }
+
+        html.dark .kanban-detail-image {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
         .kanban-form-group {
             margin-bottom: 14px;
         }
@@ -433,6 +498,16 @@
         }
     </style>
 
+    <div
+        x-show="toast.show"
+        x-transition
+        class="kanban-toast"
+        x-bind:class="toast.type"
+        style="display: none;"
+    >
+        <span x-text="toast.message"></span>
+    </div>
+
     <div class="kanban-shell">
         <p class="kanban-subtitle">
             Geser kartu ke kolom lain untuk mengubah status perbaikan.
@@ -442,15 +517,13 @@
             @foreach ($columns as $status => $column)
                 <section
                     class="kanban-column {{ $status }}"
-                    @if ($status !== 'selesai')
-                        x-on:dragover.prevent
-                        x-on:drop="
-                            if (draggedId) {
-                                $wire.updateStatus(draggedId, '{{ $status }}');
-                                draggedId = null;
-                            }
-                        "
-                    @endif
+                    x-on:dragover.prevent
+                    x-on:drop="
+                        if (draggedId) {
+                            $wire.updateStatus(draggedId, '{{ $status }}');
+                            draggedId = null;
+                        }
+                    "
                 >
                     <div>
                         <div class="kanban-column-header">
@@ -530,40 +603,42 @@
                     </button>
                 </div>
 
-                <div class="kanban-detail-grid">
-                    <div class="kanban-detail-box">
-                        <p class="kanban-detail-label">No. Laporan</p>
-                        <p class="kanban-detail-value">{{ $detailData['no_laporan'] ?? '-' }}</p>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                        <p class="text-xs text-gray-500">No. Laporan</p>
+                        <p class="font-semibold text-gray-900">{{ $detailData['no_laporan'] ?? '-' }}</p>
                     </div>
 
-                    <div class="kanban-detail-box">
-                        <p class="kanban-detail-label">Lab</p>
-                        <p class="kanban-detail-value">{{ $detailData['lab'] ?? '-' }}</p>
+                    <div>
+                        <p class="text-xs text-gray-500">Lab</p>
+                        <p class="font-semibold text-gray-900">{{ $detailData['lab'] ?? '-' }}</p>
                     </div>
 
-                    <div class="kanban-detail-box">
-                        <p class="kanban-detail-label">Pelapor</p>
-                        <p class="kanban-detail-value">{{ $detailData['pelapor'] ?? '-' }}</p>
+                    <div>
+                        <p class="text-xs text-gray-500">Pelapor</p>
+                        <p class="font-semibold text-gray-900">{{ $detailData['pelapor'] ?? '-' }}</p>
                     </div>
 
-                    <div class="kanban-detail-box">
-                        <p class="kanban-detail-label">NIM</p>
-                        <p class="kanban-detail-value">{{ $detailData['nim'] ?? '-' }}</p>
+                    <div>
+                        <p class="text-xs text-gray-500">NIM</p>
+                        <p class="font-semibold text-gray-900">{{ $detailData['nim'] ?? '-' }}</p>
                     </div>
 
-                    <div class="kanban-detail-box">
-                        <p class="kanban-detail-label">Fakultas</p>
-                        <p class="kanban-detail-value">{{ $detailData['fakultas'] ?? '-' }}</p>
+                    <div>
+                        <p class="text-xs text-gray-500">Fakultas</p>
+                        <p class="font-semibold text-gray-900">{{ $detailData['fakultas'] ?? '-' }}</p>
                     </div>
 
-                    <div class="kanban-detail-box">
-                        <p class="kanban-detail-label">Kategori</p>
-                        <p class="kanban-detail-value">{{ $detailData['kategori'] ?? '-' }}</p>
+                    <div>
+                        <p class="text-xs text-gray-500">Kategori</p>
+                        <p class="font-semibold text-gray-900">{{ $detailData['kategori'] ?? '-' }}</p>
                     </div>
 
-                    <div class="kanban-detail-box kanban-detail-wide">
-                        <p class="kanban-detail-label">Catatan Keluhan</p>
-                        <p class="kanban-detail-value">{{ $detailData['catatan_lpr'] ?? '-' }}</p>
+                    <div class="md:col-span-2">
+                        <p class="text-xs text-gray-500">Catatan Keluhan</p>
+                        <p class="mt-1 rounded-lg bg-gray-100 p-3 text-sm text-gray-900">
+                            {{ $detailData['catatan_lpr'] ?? '-' }}
+                        </p>
                     </div>
                 </div>
 
@@ -604,6 +679,10 @@
                         @error('ft_perbaikan')
                             <p class="kanban-error">{{ $message }}</p>
                         @enderror
+
+                        <div wire:loading wire:target="ft_perbaikan" style="margin-top: 6px; font-size: 13px; color: #64748b;">
+                            Mengupload...
+                        </div>
                     </div>
 
                     <div class="kanban-form-group">
