@@ -603,42 +603,58 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <p class="text-xs text-gray-500">No. Laporan</p>
-                        <p class="font-semibold text-gray-900">{{ $detailData['no_laporan'] ?? '-' }}</p>
+                <div class="kanban-detail-grid">
+                    <div class="kanban-detail-box">
+                        <p class="kanban-detail-label">No. Laporan</p>
+                        <p class="kanban-detail-value">{{ $detailData['no_laporan'] ?? '-' }}</p>
                     </div>
 
-                    <div>
-                        <p class="text-xs text-gray-500">Lab</p>
-                        <p class="font-semibold text-gray-900">{{ $detailData['lab'] ?? '-' }}</p>
+                    <div class="kanban-detail-box">
+                        <p class="kanban-detail-label">Lab</p>
+                        <p class="kanban-detail-value">{{ $detailData['lab'] ?? '-' }}</p>
                     </div>
 
-                    <div>
-                        <p class="text-xs text-gray-500">Pelapor</p>
-                        <p class="font-semibold text-gray-900">{{ $detailData['pelapor'] ?? '-' }}</p>
+                    <div class="kanban-detail-box">
+                        <p class="kanban-detail-label">Pelapor</p>
+                        <p class="kanban-detail-value">{{ $detailData['pelapor'] ?? '-' }}</p>
                     </div>
 
-                    <div>
-                        <p class="text-xs text-gray-500">NIM</p>
-                        <p class="font-semibold text-gray-900">{{ $detailData['nim'] ?? '-' }}</p>
+                    <div class="kanban-detail-box">
+                        <p class="kanban-detail-label">NIM</p>
+                        <p class="kanban-detail-value">{{ $detailData['nim'] ?? '-' }}</p>
                     </div>
 
-                    <div>
-                        <p class="text-xs text-gray-500">Fakultas</p>
-                        <p class="font-semibold text-gray-900">{{ $detailData['fakultas'] ?? '-' }}</p>
+                    <div class="kanban-detail-box">
+                        <p class="kanban-detail-label">Fakultas</p>
+                        <p class="kanban-detail-value">{{ $detailData['fakultas'] ?? '-' }}</p>
                     </div>
 
-                    <div>
-                        <p class="text-xs text-gray-500">Kategori</p>
-                        <p class="font-semibold text-gray-900">{{ $detailData['kategori'] ?? '-' }}</p>
+                    <div class="kanban-detail-box">
+                        <p class="kanban-detail-label">Kategori</p>
+                        <p class="kanban-detail-value">{{ $detailData['kategori'] ?? '-' }}</p>
                     </div>
 
-                    <div class="md:col-span-2">
-                        <p class="text-xs text-gray-500">Catatan Keluhan</p>
-                        <p class="mt-1 rounded-lg bg-gray-100 p-3 text-sm text-gray-900">
-                            {{ $detailData['catatan_lpr'] ?? '-' }}
-                        </p>
+                    <div class="kanban-detail-box kanban-detail-wide">
+                        <p class="kanban-detail-label">Catatan Keluhan</p>
+                        <p class="kanban-detail-value">{{ $detailData['catatan_lpr'] ?? '-' }}</p>
+                    </div>
+
+                    <div class="kanban-detail-box kanban-detail-wide">
+                        <p class="kanban-detail-label">Foto Kerusakan</p>
+
+                        @if (!empty($detailData['foto_url']))
+                            <div style="margin-top: 10px;">
+                                <img
+                                    src="{{ $detailData['foto_url'] }}"
+                                    alt="Foto kerusakan"
+                                    class="kanban-detail-image"
+                                >
+                            </div>
+                        @else
+                            <p class="kanban-detail-value">
+                                Tidak ada foto yang diupload.
+                            </p>
+                        @endif
                     </div>
                 </div>
 
