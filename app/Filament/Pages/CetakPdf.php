@@ -17,6 +17,7 @@ class CetakPdf extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-printer';
     protected static ?string $navigationGroup = 'Monitoring';
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Cetak PDF';
     protected static ?int $navigationSort = 3;
     protected static string $view = 'filament.pages.cetak-pdf';
