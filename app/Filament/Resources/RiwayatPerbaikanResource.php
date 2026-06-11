@@ -29,7 +29,7 @@ class RiwayatPerbaikanResource extends Resource
     {
         $user = Auth::user();
 
-        return $user?->isAdminLab() || $user?->isSPV();
+        return $user?->isAdminLab() || $user?->isSPV() || $user?->isAsistenLab();
     }
 
     protected static function statusPerbaikanLabel(?string $state): string
@@ -105,7 +105,7 @@ class RiwayatPerbaikanResource extends Resource
 
         $user = Auth::user();
 
-        if ($user?->isAdminLab()) {
+        if ($user?->isAdminLab() || $user->isAsistenLab()) {
             $labIds = $user->penugasanUserLabs()
                 ->where('status_aktif', 'aktif')
                 ->pluck('id_lab');

@@ -32,7 +32,7 @@ class PerbaikanResource extends Resource
     {
         $user = Auth::user();
 
-        return $user?->isAdminLab() || $user?->isSPV();
+        return $user?->isAdminLab() || $user?->isSPV() || $user?->isAsistenLab();
     }
 
     protected static function kategoriLabel(?string $state): string
@@ -135,7 +135,7 @@ class PerbaikanResource extends Resource
 
         $user = Auth::user();
 
-        if ($user?->isAdminLab()) {
+        if ($user?->isAdminLab() || $user->isAsistenLab()) {
             $labIds = $user->penugasanUserLabs()
                 ->where('status_aktif', 'aktif')
                 ->pluck('id_lab');
@@ -534,7 +534,7 @@ class PerbaikanResource extends Resource
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->visible(fn (Perbaikan $record): bool =>
-                        Auth::user()?->isAdminLab()
+                        Auth::user()?->isAdminLab() || Auth::user()?->isAsistenLab()
                         && $record->status_perbaikan !== 'selesai'
                     )
                     ->form([
@@ -592,7 +592,7 @@ class PerbaikanResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn (Perbaikan $record): bool =>
-                        Auth::user()?->isAdminLab()
+                        Auth::user()?->isAdminLab() || Auth::user()?->isAsistenLab()
                         && $record->status_perbaikan !== 'selesai'
                     )
                     ->form([
