@@ -19,8 +19,8 @@ class ListRiwayatPerbaikans extends ListRecords
             Actions\Action::make('cetak_pdf')
                 ->label('Cetak PDF')
                 ->icon('heroicon-o-printer')
-                ->color('success')
-                ->visible(fn (): bool => Auth::user()?->isSPV() ?? false)
+                ->color('info')
+                ->visible(fn (): bool => Auth::user()?->isSPV() || Auth::user()?->isAdminLab() ?? false)
                 ->modalHeading('Cetak PDF Riwayat Perbaikan')
                 ->modalSubmitActionLabel('Cetak')
                 ->form([

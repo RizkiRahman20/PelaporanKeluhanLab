@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\RiwayatperbaikanResource\Pages;
+namespace App\Filament\Resources\RiwayatPerbaikanResource\Pages;
 
-use App\Filament\Resources\RiwayatperbaikanResource;
+use App\Filament\Resources\RiwayatPerbaikanResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
