@@ -314,6 +314,9 @@
         .kanban-modal {
             width: 100%;
             max-width: 680px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             border-radius: 18px;
             background: #ffffff;
             color: #111827;
@@ -485,6 +488,17 @@
         @media (max-width: 768px) {
             .kanban-shell {
                 padding: 16px;
+            }
+
+            .kanban-modal-backdrop {
+                align-items: flex-start;
+                overflow-y: auto;
+                padding: 12px;
+            }
+
+            .kanban-modal {
+                max-height: calc(100dvh - 24px);
+                padding: 20px;
             }
 
             .kanban-grid,

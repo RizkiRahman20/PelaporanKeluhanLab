@@ -32,11 +32,17 @@ class ListRiwayatPerbaikans extends ListRecords
 
                     Forms\Components\DatePicker::make('dari')
                         ->label('Dari Tanggal')
-                        ->native(false),
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->format('Y-m-d')
+                        ->prefixIcon('heroicon-o-calendar-days'),
 
                     Forms\Components\DatePicker::make('sampai')
                         ->label('Sampai Tanggal')
-                        ->native(false),
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->format('Y-m-d')
+                        ->prefixIcon('heroicon-o-calendar-days'),
                 ])
                 ->action(function (array $data) {
                     $params = collect($data)
