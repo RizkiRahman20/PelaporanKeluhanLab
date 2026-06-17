@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
             'email' => 'spv.kedisiplinan@lab.test',
             'password' => Hash::make('password'),
             'role_user' => 'spv_kedisiplinan',
-            'status_aktif' => 'aktif',
+            'status' => 'aktif',
         ]);
 
         User::create([
@@ -23,7 +23,7 @@ class UserSeeder extends Seeder
             'email' => 'spv.jaringan@lab.test',
             'password' => Hash::make('password'),
             'role_user' => 'spv_jaringan',
-            'status_aktif' => 'aktif',
+            'status' => 'aktif',
         ]);
 
         for ($i = 1; $i <= 11; $i++) {
@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
                 'email' => 'admin.lab' . $i . '@lab.test',
                 'password' => Hash::make('password'),
                 'role_user' => 'admin_lab',
-                'status_aktif' => 'aktif',
+                'status' => 'aktif',
             ]);
 
             User::create([
@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
                 'email' => 'asisten.lab' . $i . '@lab.test',
                 'password' => Hash::make('password'),
                 'role_user' => 'asisten_lab',
-                'status_aktif' => 'aktif',
+                'status' => 'aktif',
             ]);
         }
     }

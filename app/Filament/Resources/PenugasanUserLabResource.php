@@ -117,7 +117,7 @@ class PenugasanUserLabResource extends Resource
     protected static function userOptions(): array
     {
         return User::query()
-            ->where('status_aktif', 'aktif')
+            ->where('status', 'aktif')
             ->orderBy('nm_user')
             ->get()
             ->mapWithKeys(function (User $user) {

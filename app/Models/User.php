@@ -21,7 +21,7 @@ class User extends Authenticatable implements FilamentUser, HasName
         'email',
         'password',
         'role_user',
-        'status_aktif',
+        'status',
     ];
 
     protected $hidden = [
@@ -43,7 +43,7 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->status_aktif === 'aktif';
+        return $this->status === 'aktif';
     }
 
     public function isSPV(): bool
