@@ -77,7 +77,7 @@ class UserResource extends Resource
                             ->searchable()
                             ->required(),
 
-                        Forms\Components\Select::make('status_aktif')
+                        Forms\Components\Select::make('status')
                             ->label('Status Aktif')
                             ->options([
                                 'aktif' => 'Aktif',
@@ -128,7 +128,7 @@ class UserResource extends Resource
                         default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('status_aktif')
+                Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
@@ -163,7 +163,7 @@ class UserResource extends Resource
                         'calon_asisten' => 'Calon Asisten',
                     ]),
 
-                Tables\Filters\SelectFilter::make('status_aktif')
+                Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
                         'aktif' => 'Aktif',

@@ -45,7 +45,7 @@ class Login extends BaseLogin
         }
 
         // Opsional: cek user aktif
-        if (isset($user->status_aktif) && $user->status_aktif !== 'aktif') {
+        if (isset($user->status_aktif) && $user->status !== 'aktif') {
             throw ValidationException::withMessages([
                 'email' => 'Akun ini tidak aktif.',
             ]);
