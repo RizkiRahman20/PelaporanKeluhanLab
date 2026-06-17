@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePenugasanUserLab extends CreateRecord
 {
     protected static string $resource = PenugasanUserLabResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
