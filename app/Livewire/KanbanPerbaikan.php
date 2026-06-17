@@ -163,6 +163,7 @@ class KanbanPerbaikan extends Component
             'tgl_ubah' => now()->toDateString(),
             'catatan_rw' => "Status diubah melalui kanban dari {$statusLama} ke {$statusBaru}.",
             'id_perbaikan' => $perbaikan->id_perbaikan,
+            'id_user' => Auth::id(),
         ]);
 
         $this->dispatch(
@@ -266,6 +267,7 @@ class KanbanPerbaikan extends Component
             'tgl_ubah' => now()->toDateString(),
             'catatan_rw' => 'Perbaikan diselesaikan melalui kanban dan menunggu validasi SPV. Catatan: ' . $this->catatan_pbk,
             'id_perbaikan' => $perbaikan->id_perbaikan,
+            'id_user' => Auth::id(),
         ]);
 
         $this->closeSelesai();

@@ -31,27 +31,38 @@ class CetakPdf extends Page implements HasForms
 
     public function form(Form $form): Form
     {
-        return $form->schema([
-            Select::make('id_lab')
-                ->label('Pilih Lab')
-                ->options(Lab::where('status_lab', 'aktif')->pluck('nm_lab', 'id_lab'))
-                ->placeholder('Semua Lab')
-                ->searchable(),
-            DatePicker::make('dari')
-                ->label('Dari Tanggal'),
-            DatePicker::make('sampai')
-                ->label('Sampai Tanggal'),
-        ])->statePath('data');
+        return $form
+            ->schema([
+                Select::make('id_lab')
+                    ->label('Pilih Lab')
+                    ->options(
+                        Lab::where('status_lab', 'aktif')
+                            ->orderBy('nm_lab')
+                            ->pluck('nm_lab', 'id_lab')
+                    )
+                    ->placeholder('Semua Lab')
+                    ->searchable(),
+
+                DatePicker::make('dari')
+                    ->label('Dari Tanggal'),
+
+                DatePicker::make('sampai')
+                    ->label('Sampai Tanggal'),
+            ])
+            ->statePath('data');
     }
 
     public function cetak(): void
     {
-        $params = http_build_query(array_filter($this->data));
-        $this->redirect('/pdf/riwayat?' . $params);
+        $params = array_filter($this->data ?? []);
+
+        $params['mode'] = 'preview';
+
+        $this->redirectRoute('pdf.riwayat', $params);
     }
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->isSPV() || Auth::user()?->isAdminLab() ?? false;
+        return (Auth::user()?->isSPV() || Auth::user()?->isAdminLab()) ?? false;
     }
 }

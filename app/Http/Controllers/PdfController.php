@@ -12,7 +12,7 @@ class PdfController extends Controller
 {
     public function cetakRiwayat(Request $request)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             abort(403);
         }
 
@@ -20,20 +20,20 @@ class PdfController extends Controller
             'id_lab' => ['nullable', 'exists:labs,id_lab'],
             'dari' => ['nullable', 'date'],
             'sampai' => ['nullable', 'date', 'after_or_equal:dari'],
+            'mode' => ['nullable', 'in:preview,download'],
         ]);
 
         $query = RiwayatPerbaikan::with([
             'perbaikan.laporan.lab',
+            'user',
         ]);
 
-        // Filter per lab langsung dari tabel laporan_keluhans
         if ($request->filled('id_lab')) {
             $query->whereHas('perbaikan.laporan', fn ($q) =>
                 $q->where('laporan_keluhans.id_lab', $request->id_lab)
             );
         }
 
-        // Filter tanggal
         if ($request->filled('dari')) {
             $query->whereDate('tgl_ubah', '>=', $request->dari);
         }
@@ -55,8 +55,15 @@ class PdfController extends Controller
             'lab' => $lab,
             'dari' => $request->dari,
             'sampai' => $request->sampai,
+            'dicetakOleh' => Auth::user()?->nm_user ?? Auth::user()?->email ?? '-',
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->download('riwayat-perbaikan-' . now()->format('Ymd') . '.pdf');
+        $filename = 'riwayat-perbaikan-' . now()->format('Ymd') . '.pdf';
+
+        if ($request->mode === 'download') {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
     }
 }

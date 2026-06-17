@@ -12,6 +12,7 @@ class RiwayatPerbaikan extends Model
 
     protected $fillable = [
         'tgl_ubah',
+        'id_user',
         'catatan_rw',
         'id_perbaikan',
     ];
@@ -23,5 +24,10 @@ class RiwayatPerbaikan extends Model
     public function perbaikan(): BelongsTo
     {
         return $this->belongsTo(Perbaikan::class, 'id_perbaikan', 'id_perbaikan');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 }
