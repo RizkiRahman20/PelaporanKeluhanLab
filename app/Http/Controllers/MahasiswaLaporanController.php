@@ -24,7 +24,8 @@ class MahasiswaLaporanController extends Controller
         $request->validate([
             'nim_pelapor'      => ['required', 'regex:/^[0-9]{10}$/'],
             'nm_pelapor'       => ['required', 'regex:/^[\pL\s]+$/u', 'max:100'],
-            'fakultas_pelapor' => ['required', 'regex:/^[\pL\s]+$/u', 'max:100'],
+            'fakultas_pelapor' => ['required', 'string', 'max:100'],
+            'prodi_pelapor' => ['required', 'string', 'max:100'],
 
             'id_lab'           => ['required', 'exists:labs,id_lab'],
             'kategori'         => ['required', 'in:PC,non_PC'],
@@ -37,12 +38,11 @@ class MahasiswaLaporanController extends Controller
             'nm_pelapor.required' => 'Nama lengkap wajib diisi.',
             'nm_pelapor.regex'    => 'Nama lengkap hanya boleh berisi huruf dan spasi.',
 
-            'fakultas_pelapor.required' => 'Fakultas wajib diisi.',
-            'fakultas_pelapor.regex'    => 'Fakultas hanya boleh berisi huruf dan spasi.',
+            'fakultas_pelapor.required' => 'Pilih fakultas terlebih dahulu.',
+            'fakultas_pelapor.regex'    => 'Fakultas tidak ada.',
 
-            // Kalau ada field program studi
-            // 'prodi_pelapor.required' => 'Program studi wajib diisi.',
-            // 'prodi_pelapor.regex'    => 'Program studi hanya boleh berisi huruf dan spasi.',
+            'prodi_pelapor.required' => 'Program studi dipilih.',
+            'prodi_pelapor.regex'    => 'Program studi tidak ada.',
 
             'id_lab.required'   => 'Pilih laboratorium terlebih dahulu.',
             'id_lab.exists'     => 'Laboratorium tidak valid.',
@@ -81,6 +81,7 @@ class MahasiswaLaporanController extends Controller
             'nim_pelapor'      => $request->nim_pelapor,
             'nm_pelapor'       => $request->nm_pelapor,
             'fakultas_pelapor' => $request->fakultas_pelapor,
+            'prodi_pelapor'=>$request->prodi_pelapor,
             'kategori'         => $request->kategori,
             'catatan_lpr'      => $request->catatan_lpr,
             'file_foto'        => $filePath,

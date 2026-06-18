@@ -20,6 +20,7 @@ class LaporanKeluhan extends Model
         'nim_pelapor',
         'nm_pelapor',
         'fakultas_pelapor',
+        'prodi_pelapor',
         'kategori',
         'catatan_lpr',
         'file_foto',
