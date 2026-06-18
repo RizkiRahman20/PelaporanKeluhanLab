@@ -157,8 +157,17 @@ class LaporanKeluhanResource extends Resource
                             ->disabled(),
 
                         Forms\Components\TextInput::make('fakultas_pelapor')
-                            ->label('Fakultas / Program Studi')
+                            ->label('Fakultas')
                             ->disabled(),
+                        
+                        Forms\Components\TextInput::make('prodi_pelapor')
+                            ->label('Prodi')
+                            ->disabled(),
+
+                        Tables\Columns\TextColumn::make('prodi_pelapor')
+                            ->label('Program Studi')
+                            ->searchable()
+                            ->toggleable(isToggledHiddenByDefault: false),
 
                         Forms\Components\TextInput::make('lab.nm_lab')
                             ->label('Laboratorium')
@@ -227,6 +236,7 @@ class LaporanKeluhanResource extends Resource
                         collect([
                             $record->nim_pelapor ? 'NIM: ' . $record->nim_pelapor : null,
                             $record->fakultas_pelapor,
+                            $record->prodi_pelapor,
                         ])
                             ->filter()
                             ->implode(' • ')
@@ -392,7 +402,11 @@ class LaporanKeluhanResource extends Resource
                                     ->placeholder('-'),
 
                                 Infolists\Components\TextEntry::make('fakultas_pelapor')
-                                    ->label('Fakultas / Program Studi')
+                                    ->label('Fakultas')
+                                    ->placeholder('-'),
+                                
+                                Infolists\Components\TextEntry::make('prodi_pelapor')
+                                    ->label('Prodi')
                                     ->placeholder('-'),
 
                                 Infolists\Components\TextEntry::make('lab.nm_lab')

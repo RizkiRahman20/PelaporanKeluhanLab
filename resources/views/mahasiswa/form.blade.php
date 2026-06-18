@@ -329,11 +329,27 @@
 
                 {{-- FAKULTAS --}}
                 <div class="form-group">
-                    <label class="form-label">Fakultas / Program Studi <span>*</span></label>
-                    <input type="text" name="fakultas_pelapor" value="{{ old('fakultas_pelapor') }}"
-                           class="form-input {{ $errors->has('fakultas_pelapor') ? 'is-error' : '' }}"
-                           placeholder="Contoh: Teknik Informatika" required>
+                    <label class="form-label">Fakultas<span>*</span></label>
+                    <select name="fakultas_pelapor" id="fakultas" class="form-input {{ $errors->has('fakultas_pelapor') ? 'is-error' : '' }}" required>
+                        <option value="" disabled selected>-- Pilih Fakultas --</option>
+                        <option value="FTI" {{ old('fakultas_pelapor') == 'FTI' ? 'selected' : '' }}>Fakultas Teknologi Informasi (FTI)</option>
+                        <option value="FEB" {{ old('fakultas_pelapor') == 'FEB' ? 'selected' : '' }}>Fakultas Ekonomi dan Bisnis (FEB)</option>
+                        <option value="FT" {{ old('fakultas_pelapor') == 'FT' ? 'selected' : '' }}>Fakultas Teknik (FT)</option>
+                        <option value="FISSIG" {{ old('fakultas_pelapor') == 'FISSIG' ? 'selected' : '' }}>Fakultas Ilmu Sosial & Studi Global (FISSIG)</option>
+                        <option value="FKDK" {{ old('fakultas_pelapor') == 'FKDK' ? 'selected' : '' }}>Fakultas Komunikasi & Design (FKDK)</option>
+                    </select>
                     @error('fakultas_pelapor')
+                        <span class="form-error">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                {{-- PROGRAM STUDI --}}
+                <div class="form-group">
+                    <label class="form-label">Program Studi<span>*</span></label>
+                    <select name="prodi_pelapor" id="prodi" class="form-input {{ $errors->has('prodi_pelapor') ? 'is-error' : '' }}" required>
+                        <option value="" disabled selected>-- Pilih Program Studi --</option>
+                        </select>
+                    @error('prodi_pelapor')
                         <span class="form-error">{{ $message }}</span>
                     @enderror
                 </div>
@@ -419,6 +435,63 @@
         } else {
             el.textContent = '';
         }
+    }
+
+    const dataProdi = {
+        "FTI": [
+            "Teknik Informatika", 
+            "Sistem Informasi", 
+            "Sistem Komputer"
+        ],
+        "FEB": [
+            "Akuntansi", 
+            "Manajemen",
+            "Manajemen Bencana",
+            "International Bussiness Management Study" 
+        ],
+        "FKDK": [
+            "Ilmu Komunikasi", 
+            "Desain Komunikasi Visual" 
+        ],
+        "FT": [
+            "Arsitektur", 
+            "Teknik Elektro" 
+        ],
+        "FISSIG":[
+            "Hubungan International",
+            "Kriminologi"
+        ]
+    };
+
+    const fakultasSelect = document.getElementById('fakultas');
+    const prodiSelect = document.getElementById('prodi');
+    
+    const oldProdi = "{{ old('prodi_pelapor') }}";
+
+    function updateProdi() {
+        const selectedFakultas = fakultasSelect.value;
+        
+        prodiSelect.innerHTML = '<option value="" disabled selected>-- Pilih Program Studi --</option>';
+
+        if (selectedFakultas && dataProdi[selectedFakultas]) {
+            dataProdi[selectedFakultas].forEach(function(prodi) {
+                const option = document.createElement('option');
+                option.value = prodi;
+                option.textContent = prodi;
+                
+                if (prodi === oldProdi) {
+                    option.selected = true;
+                }
+                
+                prodiSelect.appendChild(option);
+            });
+        }
+    }
+
+    fakultasSelect.addEventListener('change', updateProdi);
+
+    if (fakultasSelect.value) {
+        updateProdi();
     }
 
     // Disable tombol submit setelah klik (mencegah double submit)
