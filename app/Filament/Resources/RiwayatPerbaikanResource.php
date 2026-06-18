@@ -101,11 +101,13 @@ class RiwayatPerbaikanResource extends Resource
             ->with([
                 'perbaikan.laporan.lab',
                 'perbaikan.laporan.penugasan.user',
+                'perbaikan',
+                'user',
             ]);
 
         $user = Auth::user();
 
-        if ($user?->isAdminLab() || $user->isAsistenLab()) {
+        if ($user?->isAdminLab() || $user?->isAsistenLab()) {
             $labIds = $user->penugasanUserLabs()
                 ->where('status_aktif', 'aktif')
                 ->pluck('id_lab');
@@ -166,11 +168,20 @@ class RiwayatPerbaikanResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('perbaikan.status_perbaikan')
-                    ->label('Status Perbaikan')
+                    ->label('Status Riwayat')
                     ->badge()
                     ->icon(fn (?string $state): string => self::statusPerbaikanIcon($state))
                     ->formatStateUsing(fn (?string $state): string => self::statusPerbaikanLabel($state))
                     ->color(fn (?string $state): string => self::statusPerbaikanColor($state)),
+
+                Tables\Columns\TextColumn::make('user.nm_user')
+                    ->label('Diubah Oleh')
+                    ->icon('heroicon-o-user-circle')
+                    ->badge()
+                    ->color('gray')
+                    ->placeholder('-')
+                    ->searchable()
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('perbaikan.app_validasi')
                     ->label('Validasi SPV')
@@ -259,13 +270,25 @@ class RiwayatPerbaikanResource extends Resource
                                 Infolists\Components\TextEntry::make('tgl_ubah')
                                     ->label('Tanggal Ubah')
                                     ->date('d M Y'),
+
+                                Infolists\Components\TextEntry::make('user.nm_user')
+                                    ->label('Diubah Oleh')
+                                    ->badge()
+                                    ->color('gray')
+                                    ->placeholder('-'),
                             ]),
 
                         Infolists\Components\Section::make('Status Perbaikan')
                             ->columns(2)
                             ->schema([
+                                Infolists\Components\TextEntry::make('status_ubah')
+                                    ->label('Status Riwayat')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?string $state): string => self::statusPerbaikanLabel($state))
+                                    ->color(fn (?string $state): string => self::statusPerbaikanColor($state)),
+
                                 Infolists\Components\TextEntry::make('perbaikan.status_perbaikan')
-                                    ->label('Status Perbaikan')
+                                    ->label('Status Saat Ini')
                                     ->badge()
                                     ->formatStateUsing(fn (?string $state): string => self::statusPerbaikanLabel($state))
                                     ->color(fn (?string $state): string => self::statusPerbaikanColor($state)),

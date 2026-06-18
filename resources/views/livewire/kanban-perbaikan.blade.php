@@ -559,42 +559,51 @@
 
                     <div class="kanban-items">
                         @forelse ($perbaikans[$status] as $item)
-                            <article
-                                class="kanban-card"
-                                draggable="{{ $status !== 'selesai' ? 'true' : 'false' }}"
-                                x-on:dragstart="draggedId = {{ $item->id_perbaikan }}"
-                                x-on:dragend="draggedId = null"
-                                wire:key="perbaikan-{{ $item->id_perbaikan }}"
-                            >
-                                <p class="kanban-card-title">
-                                    {{ $item->laporan?->catatan_lpr ?? 'Tidak ada catatan keluhan.' }}
-                                </p>
+    @php
+        $isLocked = $item->status_perbaikan === 'selesai'
+            || $item->app_validasi === 'divalidasi';
+    @endphp
 
-                                <div class="kanban-card-footer">
-                                    <span class="kanban-badge">
-                                        {{ $item->laporan?->lab?->nm_lab ?? 'Lab -' }}
-                                    </span>
+    <article
+        class="kanban-card"
+        draggable="{{ $isLocked ? 'false' : 'true' }}"
+        x-on:dragstart="
+            if (! {{ $isLocked ? 'true' : 'false' }}) {
+                draggedId = {{ $item->id_perbaikan }};
+            }
+        "
+        x-on:dragend="draggedId = null"
+        wire:key="perbaikan-{{ $item->id_perbaikan }}"
+    >
+        <p class="kanban-card-title">
+            {{ $item->laporan?->catatan_lpr ?? 'Tidak ada catatan keluhan.' }}
+        </p>
 
-                                    <button
-                                        type="button"
-                                        wire:click="openDetail({{ $item->id_perbaikan }})"
-                                        class="kanban-detail-btn"
-                                    >
-                                        Detail
-                                    </button>
-                                </div>
+        <div class="kanban-card-footer">
+            <span class="kanban-badge">
+                {{ $item->laporan?->lab?->nm_lab ?? 'Lab -' }}
+            </span>
 
-                                @if ($item->status_perbaikan !== 'selesai')
-                                    <button
-                                        type="button"
-                                        wire:click="openSelesaikan({{ $item->id_perbaikan }})"
-                                        class="kanban-finish-btn"
-                                    >
-                                        Selesaikan
-                                    </button>
-                                @endif
-                            </article>
-                        @empty
+            <button
+                type="button"
+                wire:click="openDetail({{ $item->id_perbaikan }})"
+                class="kanban-detail-btn"
+            >
+                Detail
+            </button>
+        </div>
+
+        @if (! $isLocked)
+            <button
+                type="button"
+                wire:click="openSelesaikan({{ $item->id_perbaikan }})"
+                class="kanban-finish-btn"
+            >
+                Selesaikan
+            </button>
+        @endif
+    </article>
+@empty
                             <div class="kanban-empty">
                                 Belum ada perbaikan
                             </div>

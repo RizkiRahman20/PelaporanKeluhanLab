@@ -82,6 +82,12 @@ class KanbanPerbaikan extends Component
             ->firstOrFail();
     }
 
+    protected function perbaikanTerkunci(Perbaikan $perbaikan): bool
+    {
+        return $perbaikan->status_perbaikan === 'selesai'
+            || $perbaikan->app_validasi === 'divalidasi';
+    }
+
     protected function makePublicUrl(?string $path): ?string
     {
         if (blank($path)) {
@@ -108,70 +114,63 @@ class KanbanPerbaikan extends Component
     }
 
     public function updateStatus(int $idPerbaikan, string $statusBaru): void
-    {
-        if (! array_key_exists($statusBaru, $this->columns)) {
-            $this->dispatch(
-                'kanban-notify',
-                type: 'error',
-                message: 'Status tujuan tidak valid.'
-            );
-
-            return;
-        }
-
-        $perbaikan = $this->findPerbaikanForAdmin($idPerbaikan);
-
-        if ($perbaikan->status_perbaikan === 'selesai') {
-            $this->dispatch(
-                'kanban-notify',
-                type: 'warning',
-                message: 'Perbaikan yang sudah selesai tidak bisa dipindahkan lagi.'
-            );
-
-            return;
-        }
-
-        if ($statusBaru === 'selesai') {
-            $this->openSelesaikan($idPerbaikan);
-
-            $this->dispatch(
-                'kanban-notify',
-                type: 'info',
-                message: 'Upload bukti perbaikan terlebih dahulu untuk menyelesaikan tugas.'
-            );
-
-            return;
-        }
-
-        $statusLama = $perbaikan->status_perbaikan;
-
-        if ($statusLama === $statusBaru) {
-            return;
-        }
-
-        $updateData = [
-            'status_perbaikan' => $statusBaru,
-        ];
-
-        if ($statusBaru === 'dikerjakan' && blank($perbaikan->tgl_mulai)) {
-            $updateData['tgl_mulai'] = now()->toDateString();
-        }
-
-        $perbaikan->update($updateData);
-
-        RiwayatPerbaikan::create([
-            'tgl_ubah' => now()->toDateString(),
-            'catatan_rw' => "Status diubah melalui kanban dari {$statusLama} ke {$statusBaru}.",
-            'id_perbaikan' => $perbaikan->id_perbaikan,
-            'id_user' => Auth::id(),
-        ]);
-
+{
+    if (! array_key_exists($statusBaru, $this->columns)) {
         $this->dispatch(
             'kanban-notify',
-            type: 'success',
-            message: 'Status perbaikan berhasil diperbarui.'
+            type: 'error',
+            message: 'Status tidak valid.'
         );
+
+        return;
     }
+
+    $perbaikan = $this->findPerbaikanForAdmin($idPerbaikan);
+
+    if ($this->perbaikanTerkunci($perbaikan)) {
+        $this->dispatch(
+            'kanban-notify',
+            type: 'warning',
+            message: 'Perbaikan yang sudah selesai/divalidasi tidak bisa dipindahkan lagi.'
+        );
+
+        return;
+    }
+
+    if ($statusBaru === 'selesai') {
+        $this->openSelesaikan($idPerbaikan);
+        return;
+    }
+
+    if ($perbaikan->status_perbaikan === $statusBaru) {
+        return;
+    }
+
+    $statusLama = $perbaikan->status_perbaikan;
+
+    $updateData = [
+        'status_perbaikan' => $statusBaru,
+    ];
+
+    if ($statusBaru === 'dikerjakan' && blank($perbaikan->tgl_mulai)) {
+        $updateData['tgl_mulai'] = now()->toDateString();
+    }
+
+    $perbaikan->update($updateData);
+
+    RiwayatPerbaikan::create([
+        'tgl_ubah' => now()->toDateString(),
+        'catatan_rw' => "Status diubah dari {$statusLama} ke {$statusBaru} melalui Kanban.",
+        'id_perbaikan' => $perbaikan->id_perbaikan,
+        'id_user' => Auth::id(),
+    ]);
+
+    $this->dispatch(
+        'kanban-notify',
+        type: 'success',
+        message: 'Status perbaikan berhasil diupdate.'
+    );
+}
 
     public function openDetail(int $idPerbaikan): void
     {
@@ -191,9 +190,12 @@ class KanbanPerbaikan extends Component
             'catatan_lpr' => $perbaikan->laporan?->catatan_lpr ?? '-',
             'status_perbaikan' => $perbaikan->status_perbaikan,
             'app_validasi' => $perbaikan->app_validasi,
-
             'file_foto' => $fotoLaporan,
             'foto_url' => $this->makePublicUrl($fotoLaporan),
+            'ft_perbaikan' => $perbaikan->ft_perbaikan,
+            'ft_perbaikan_url' => $this->makePublicUrl($perbaikan->ft_perbaikan),
+            'catatan_pbk' => $perbaikan->catatan_pbk ?? '-',
+            'alasan_penolakan' => $perbaikan->alasan_penolakan ?? '-',
         ];
 
         $this->showDetailModal = true;
@@ -210,16 +212,21 @@ class KanbanPerbaikan extends Component
     {
         $perbaikan = $this->findPerbaikanForAdmin($idPerbaikan);
 
-        if ($perbaikan->status_perbaikan === 'selesai') {
+        if ($this->perbaikanTerkunci($perbaikan)) {
+            $this->dispatch(
+                'kanban-notify',
+                type: 'warning',
+                message: 'Perbaikan ini sudah selesai/divalidasi dan tidak bisa diselesaikan ulang.'
+            );
+
             return;
         }
 
         $this->selectedPerbaikanId = $perbaikan->id_perbaikan;
-        $this->catatan_pbk = null;
-        $this->ft_perbaikan = null;
         $this->showSelesaiModal = true;
 
         $this->resetValidation();
+        $this->reset(['ft_perbaikan', 'catatan_pbk']);
     }
 
     public function closeSelesai(): void
@@ -245,10 +252,16 @@ class KanbanPerbaikan extends Component
             'ft_perbaikan.max' => 'Ukuran gambar maksimal 2MB.',
         ]);
 
-        $perbaikan = $this->findPerbaikanForAdmin($this->selectedPerbaikanId);
+        $perbaikan = $this->findPerbaikanForAdmin((int) $this->selectedPerbaikanId);
 
-        if ($perbaikan->status_perbaikan === 'selesai') {
+        if ($this->perbaikanTerkunci($perbaikan)) {
             $this->closeSelesai();
+
+            $this->dispatch(
+                'kanban-notify',
+                type: 'warning',
+                message: 'Perbaikan ini sudah selesai/divalidasi dan tidak bisa diselesaikan ulang.'
+            );
 
             return;
         }
@@ -261,11 +274,12 @@ class KanbanPerbaikan extends Component
             'ft_perbaikan' => $path,
             'catatan_pbk' => $this->catatan_pbk,
             'app_validasi' => 'menunggu',
+            'alasan_penolakan' => null,
         ]);
 
         RiwayatPerbaikan::create([
             'tgl_ubah' => now()->toDateString(),
-            'catatan_rw' => 'Perbaikan diselesaikan melalui kanban dan menunggu validasi SPV. Catatan: ' . $this->catatan_pbk,
+            'catatan_rw' => 'Perbaikan diselesaikan melalui Kanban dan menunggu validasi SPV. Catatan: ' . $this->catatan_pbk,
             'id_perbaikan' => $perbaikan->id_perbaikan,
             'id_user' => Auth::id(),
         ]);
