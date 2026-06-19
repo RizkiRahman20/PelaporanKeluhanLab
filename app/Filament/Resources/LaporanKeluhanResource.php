@@ -466,73 +466,78 @@ class LaporanKeluhanResource extends Resource
                     ]),
 
                 Action::make('setujui')
-                    ->label('Setujui')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn (LaporanKeluhan $record): bool =>
-                        Auth::user()?->isSPV()
-                        && $record->approval === 'menunggu'
-                    )
-                    ->form([
-                        Forms\Components\Select::make('id_penugasan')
-                            ->label('Delegasikan ke Admin / Asisten Lab')
-                            ->helperText('Pilih admin atau asisten lab yang aktif pada laboratorium terkait.')
-                            ->options(function (LaporanKeluhan $record) {
-                                return PenugasanUserLab::with(['user', 'lab'])
-                                    ->where('status_aktif', 'aktif')
-                                    ->where('id_lab', $record->id_lab)
-                                    ->whereHas('user', function (Builder $query) {
-                                        $query->whereIn('role_user', [
-                                            'admin_lab',
-                                            'asisten_lab',
-                                        ])->where('status_aktif', 'aktif');
-                                    })
-                                    ->get()
-                                    ->mapWithKeys(function (PenugasanUserLab $penugasan) {
-                                        return [
-                                            $penugasan->id_penugasan => $penugasan->user->nm_user . ' - ' . $penugasan->lab->nm_lab,
-                                        ];
-                                    })
-                                    ->toArray();
-                            })
-                            ->searchable()
-                            ->required(),
-                    ])
-                    ->requiresConfirmation()
-                    ->modalIcon('heroicon-o-check-circle')
-                    ->modalIconColor('success')
-                    ->modalHeading('Setujui Laporan')
-                    ->modalDescription('Laporan akan disetujui dan otomatis masuk antrean perbaikan.')
-                    ->modalSubmitActionLabel('Ya, setujui')
-                    ->action(function (LaporanKeluhan $record, array $data): void {
-                        $record->update([
-                            'approval' => 'disetujui',
-                            'id_user' => Auth::id(),
-                            'id_penugasan' => $data['id_penugasan'],
-                            'alasan_penolakan' => null,
-                        ]);
+    ->label('Setujui')
+    ->icon('heroicon-o-check-circle')
+    ->color('success')
+    ->visible(fn (LaporanKeluhan $record): bool =>
+        Auth::user()?->isSPV()
+        && $record->approval === 'menunggu'
+    )
+    ->requiresConfirmation()
+    ->modalIcon('heroicon-o-check-circle')
+    ->modalIconColor('success')
+    ->modalHeading('Setujui Laporan')
+    ->modalDescription('Laporan akan disetujui dan otomatis diteruskan ke admin/asisten lab yang bertugas pada laboratorium terkait.')
+    ->modalSubmitActionLabel('Ya, setujui')
+    ->action(function (LaporanKeluhan $record): void {
+        $penugasan = PenugasanUserLab::with(['user', 'lab'])
+            ->where('status_aktif', 'aktif')
+            ->where('id_lab', $record->id_lab)
+            ->whereHas('user', function (Builder $query) {
+                $query->whereIn('role_user', [
+                    'admin_lab',
+                    'asisten_lab',
+                ])->where('status_aktif', 'aktif');
+            })
+            ->get()
+            ->sortBy(function (PenugasanUserLab $penugasan): int {
+                return match ($penugasan->user?->role_user) {
+                    'admin_lab' => 1,
+                    'asisten_lab' => 2,
+                    default => 3,
+                };
+            })
+            ->first();
 
-                        $perbaikan = Perbaikan::firstOrCreate(
-                            [
-                                'id_laporan' => $record->no_laporan,
-                            ],
-                            [
-                                'status_perbaikan' => 'antrean',
-                                'app_validasi' => 'menunggu',
-                            ]
-                        );
+        if (! $penugasan) {
+            Notification::make()
+                ->title('Delegasi gagal')
+                ->body('Belum ada admin/asisten lab aktif yang ditugaskan pada lab ini.')
+                ->danger()
+                ->send();
 
-                        RiwayatPerbaikan::create([
-                            'tgl_ubah' => now()->toDateString(),
-                            'catatan_rw' => 'Laporan disetujui oleh SPV dan masuk antrean perbaikan.',
-                            'id_perbaikan' => $perbaikan->id_perbaikan,
-                        ]);
+            return;
+        }
 
-                        Notification::make()
-                            ->title('Laporan berhasil disetujui dan didelegasikan.')
-                            ->success()
-                            ->send();
-                    }),
+        $record->update([
+            'approval' => 'disetujui',
+            'id_user' => Auth::id(),
+            'id_penugasan' => $penugasan->id_penugasan,
+            'alasan_penolakan' => null,
+        ]);
+
+        $perbaikan = Perbaikan::firstOrCreate(
+            [
+                'id_laporan' => $record->no_laporan,
+            ],
+            [
+                'status_perbaikan' => 'antrean',
+                'app_validasi' => 'menunggu',
+            ]
+        );
+
+        RiwayatPerbaikan::create([
+            'tgl_ubah' => now()->toDateString(),
+            'catatan_rw' => 'Laporan disetujui oleh SPV dan otomatis diteruskan ke ' . ($penugasan->user?->nm_user ?? 'admin/asisten lab') . '.',
+            'id_perbaikan' => $perbaikan->id_perbaikan,
+        ]);
+
+        Notification::make()
+            ->title('Laporan berhasil disetujui')
+            ->body('Laporan otomatis diteruskan ke ' . ($penugasan->user?->nm_user ?? 'admin/asisten lab') . '.')
+            ->success()
+            ->send();
+    }),
 
                 Action::make('tolak')
                     ->label('Tolak')
