@@ -88,6 +88,11 @@ class KanbanPerbaikan extends Component
             || $perbaikan->app_validasi === 'divalidasi';
     }
 
+    protected function bolehDiselesaikan(Perbaikan $perbaikan): bool
+{
+    return $perbaikan->status_perbaikan === 'dikerjakan';
+}
+
     protected function makePublicUrl(?string $path): ?string
     {
         if (blank($path)) {
@@ -138,7 +143,18 @@ class KanbanPerbaikan extends Component
     }
 
     if ($statusBaru === 'selesai') {
+        if (! $this->bolehDiselesaikan($perbaikan)) {
+            $this->dispatch(
+                'kanban-notify',
+                type: 'warning',
+                message: 'Perbaikan harus masuk ke status Dikerjakan terlebih dahulu sebelum diselesaikan.'
+            );
+
+            return;
+        }
+
         $this->openSelesaikan($idPerbaikan);
+
         return;
     }
 
@@ -209,25 +225,35 @@ class KanbanPerbaikan extends Component
     }
 
     public function openSelesaikan(int $idPerbaikan): void
-    {
-        $perbaikan = $this->findPerbaikanForAdmin($idPerbaikan);
+{
+    $perbaikan = $this->findPerbaikanForAdmin($idPerbaikan);
 
-        if ($this->perbaikanTerkunci($perbaikan)) {
-            $this->dispatch(
-                'kanban-notify',
-                type: 'warning',
-                message: 'Perbaikan ini sudah selesai/divalidasi dan tidak bisa diselesaikan ulang.'
-            );
+    if ($this->perbaikanTerkunci($perbaikan)) {
+        $this->dispatch(
+            'kanban-notify',
+            type: 'warning',
+            message: 'Perbaikan ini sudah selesai/divalidasi dan tidak bisa diselesaikan ulang.'
+        );
 
-            return;
-        }
-
-        $this->selectedPerbaikanId = $perbaikan->id_perbaikan;
-        $this->showSelesaiModal = true;
-
-        $this->resetValidation();
-        $this->reset(['ft_perbaikan', 'catatan_pbk']);
+        return;
     }
+
+    if (! $this->bolehDiselesaikan($perbaikan)) {
+        $this->dispatch(
+            'kanban-notify',
+            type: 'warning',
+            message: 'Perbaikan harus masuk ke status Dikerjakan terlebih dahulu sebelum diselesaikan.'
+        );
+
+        return;
+    }
+
+    $this->selectedPerbaikanId = $perbaikan->id_perbaikan;
+    $this->showSelesaiModal = true;
+
+    $this->resetValidation();
+    $this->reset(['ft_perbaikan', 'catatan_pbk']);
+}
 
     public function closeSelesai(): void
     {
