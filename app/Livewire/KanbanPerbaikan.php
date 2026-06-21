@@ -142,6 +142,18 @@ class KanbanPerbaikan extends Component
         return;
     }
 
+    // --- VALIDASI BARU: Mencegah status 'menunggu_sparepart' atau 'dikerjakan' kembali ke 'antrean' ---
+    if (in_array($perbaikan->status_perbaikan, ['menunggu_sparepart', 'dikerjakan']) && $statusBaru === 'antrean') {
+        $this->dispatch(
+            'kanban-notify',
+            type: 'warning',
+            message: 'Perbaikan yang sudah diproses tidak bisa dikembalikan lagi ke Antrean.'
+        );
+
+        return;
+    }
+    // -------------------------------------------------------------------------------------------------
+
     if ($statusBaru === 'selesai') {
         if (! $this->bolehDiselesaikan($perbaikan)) {
             $this->dispatch(
@@ -320,18 +332,23 @@ class KanbanPerbaikan extends Component
     }
 
     public function render()
-    {
-        $perbaikans = [];
+{
+    $perbaikans = [];
 
-        foreach (array_keys($this->columns) as $status) {
-            $perbaikans[$status] = (clone $this->baseQuery())
-                ->where('status_perbaikan', $status)
-                ->latest()
-                ->get();
+    foreach (array_keys($this->columns) as $status) {
+        $query = (clone $this->baseQuery())
+            ->where('status_perbaikan', $status)
+            ->latest();
+
+        if ($status === 'selesai') {
+            $query->where('tgl_selesai', '>=', now()->subDays(7)->toDateString());
         }
 
-        return view('livewire.kanban-perbaikan', [
-            'perbaikans' => $perbaikans,
-        ]);
+        $perbaikans[$status] = $query->get();
     }
+
+    return view('livewire.kanban-perbaikan', [
+        'perbaikans' => $perbaikans,
+    ]);
+}
 }

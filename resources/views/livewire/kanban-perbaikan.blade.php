@@ -181,6 +181,42 @@
             flex-direction: column;
             gap: 12px;
             flex: 1;
+
+            max-height: 65vh;
+            overflow-y: auto;
+            padding-right: 8px
+        }
+
+        .kanban-items::-webkit-scrollbar {
+            width: 6px;
+        }
+        .kanban-items::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .kanban-items::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 10px;
+        }
+        html.dark .kanban-items::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .kanban-rejection-box {
+            margin-top: 8px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        html.dark .kanban-rejection-box {
+            background: rgba(220, 38, 38, 0.15);
+            border-color: rgba(220, 38, 38, 0.35);
+            color: #fca5a5;
         }
 
         .kanban-card {
@@ -580,10 +616,6 @@
         </p>
 
         <div class="kanban-card-footer">
-            <span class="kanban-badge">
-                {{ $item->laporan?->lab?->nm_lab ?? 'Lab -' }}
-            </span>
-
             <button
                 type="button"
                 wire:click="openDetail({{ $item->id_perbaikan }})"
@@ -661,6 +693,22 @@
                         <p class="kanban-detail-label">Catatan Keluhan</p>
                         <p class="kanban-detail-value">{{ $detailData['catatan_lpr'] ?? '-' }}</p>
                     </div>
+
+                    <div class="kanban-detail-box kanban-detail-wide">
+    <p class="kanban-detail-label">
+        Alasan Dikembalikan (SPV)
+    </p>
+    
+    @if($item->app_validasi === 'dikembalikan' && !empty($item->alasan_penolakan))
+        <div class="kanban-rejection-box">
+            {{ $item->alasan_penolakan }}
+        </div>
+    @else
+        <p class="kanban-detail-value">
+            -
+        </p>
+    @endif
+</div>
 
                     <div class="kanban-detail-box kanban-detail-wide">
                         <p class="kanban-detail-label">Foto Kerusakan</p>
