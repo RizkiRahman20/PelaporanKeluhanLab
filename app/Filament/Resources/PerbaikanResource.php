@@ -753,9 +753,10 @@ class PerbaikanResource extends Resource
             }
 
             $record->update([
-                'status_perbaikan' => 'dikerjakan',
+                'status_perbaikan' => 'antrean',
                 'app_validasi' => 'dikembalikan',
                 'alasan_penolakan' => $data['alasan'],
+                'tgl_selesai' => null,
             ]);
 
             RiwayatPerbaikan::create([

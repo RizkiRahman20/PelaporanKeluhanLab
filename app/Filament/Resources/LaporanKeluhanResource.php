@@ -268,14 +268,16 @@ class LaporanKeluhanResource extends Resource
                     ->badge()
                     ->icon(fn (?string $state): string => self::kategoriIcon($state))
                     ->formatStateUsing(fn (?string $state): string => self::kategoriLabel($state))
-                    ->color(fn (?string $state): string => self::kategoriColor($state)),
+                    ->color(fn (?string $state): string => self::kategoriColor($state))
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('approval')
                     ->label('Approval')
                     ->badge()
                     ->icon(fn (?string $state): string => self::approvalIcon($state))
                     ->formatStateUsing(fn (?string $state): string => self::approvalLabel($state))
-                    ->color(fn (?string $state): string => self::approvalColor($state)),
+                    ->color(fn (?string $state): string => self::approvalColor($state))
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('penugasan.user.nm_user')
                     ->label('Delegasi')
