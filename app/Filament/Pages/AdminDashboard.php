@@ -30,6 +30,33 @@ class AdminDashboard extends Page
             ->pluck('id_lab');
     }
 
+    // Method baru untuk mengambil pesan selamat datang
+    protected function getWelcomeMessage(): string
+    {
+        $user = Auth::user();
+
+        // Mengambil nama lab dari tabel relasi
+        // ASUMSI: penugasanUserLabs memiliki relasi ke 'lab' dan tabel lab memiliki kolom 'nama_lab'
+        $labNames = $user->penugasanUserLabs()
+            ->with('lab') // Eager load relasi lab
+            ->where('status_aktif', 'aktif')
+            ->get()
+            ->pluck('lab.nm_lab') // Ubah 'nama_lab' sesuai dengan nama kolom di database Anda (misal: 'lab.name' atau 'lab.nama')
+            ->filter()
+            ->implode(' & '); // Jika user pegang >1 lab, akan jadi "lab 6 & lab 7"
+
+        // Format role agar lebih rapi (opsional)
+        $roleName = $user->role_user === 'admin_lab' ? 'Admin' : 'Asisten';
+
+        if ($labNames) {
+            // Output: "Selamat datang, Admin Lab 6"
+            return "Selamat datang, {$roleName} {$labNames}";
+        }
+
+        // Fallback jika tidak ada lab yang aktif
+        return "Selamat datang, {$user->name}";
+    }
+
     protected function basePerbaikanQuery(): Builder
     {
         $labIds = $this->getAssignedLabIds();
@@ -43,6 +70,9 @@ class AdminDashboard extends Page
     public function getViewData(): array
     {
         return [
+            // Tambahkan pesan ini agar bisa diakses di Blade
+            'welcomeMessage' => $this->getWelcomeMessage(),
+            
             'totalTugas' => (clone $this->basePerbaikanQuery())->count(),
             'totalAntrean' => (clone $this->basePerbaikanQuery())->where('status_perbaikan', 'antrean')->count(),
             'totalDikerjakan' => (clone $this->basePerbaikanQuery())->where('status_perbaikan', 'dikerjakan')->count(),

@@ -10,42 +10,7 @@
                 'accent' => 'from-sky-500/10 to-transparent',
                 'ring' => 'ring-sky-200/70 dark:ring-sky-400/20',
             ],
-            [
-                'label' => 'Antrean',
-                'value' => $totalAntrean,
-                'desc' => 'Menunggu dikerjakan',
-                'icon' => 'heroicon-o-clock',
-                'iconBg' => 'bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300',
-                'accent' => 'from-amber-500/10 to-transparent',
-                'ring' => 'ring-amber-200/70 dark:ring-amber-400/20',
-            ],
-            [
-                'label' => 'Dikerjakan',
-                'value' => $totalDikerjakan,
-                'desc' => 'Sedang dalam proses',
-                'icon' => 'heroicon-o-wrench-screwdriver',
-                'iconBg' => 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300',
-                'accent' => 'from-indigo-500/10 to-transparent',
-                'ring' => 'ring-indigo-200/70 dark:ring-indigo-400/20',
-            ],
-            [
-                'label' => 'Menunggu Sparepart',
-                'value' => $totalMenungguSparepart,
-                'desc' => 'Menunggu ketersediaan barang',
-                'icon' => 'heroicon-o-exclamation-triangle',
-                'iconBg' => 'bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-300',
-                'accent' => 'from-orange-500/10 to-transparent',
-                'ring' => 'ring-orange-200/70 dark:ring-orange-400/20',
-            ],
-            [
-                'label' => 'Selesai',
-                'value' => $totalSelesai,
-                'desc' => 'Perbaikan telah selesai',
-                'icon' => 'heroicon-o-check-circle',
-                'iconBg' => 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300',
-                'accent' => 'from-emerald-500/10 to-transparent',
-                'ring' => 'ring-emerald-200/70 dark:ring-emerald-400/20',
-            ],
+            // ... (card lainnya biarkan sama seperti kode Anda) ...
             [
                 'label' => 'Menunggu Validasi SPV',
                 'value' => $totalMenungguValidasi,
@@ -58,6 +23,14 @@
         ];
     @endphp
 
+    <div class="mb-6 flex flex-col gap-y-1">
+        <h2 class="text-2xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-3xl">
+            {{ $welcomeMessage ?? 'Selamat datang, Admin' }}
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            Berikut adalah ringkasan status tugas perbaikan di lab Anda hari ini.
+        </p>
+    </div>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         @foreach ($cards as $card)
             <div
