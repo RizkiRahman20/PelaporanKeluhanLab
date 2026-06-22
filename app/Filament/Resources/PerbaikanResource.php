@@ -783,7 +783,7 @@ class PerbaikanResource extends Resource
     {
         return [
             'index' => Pages\ListPerbaikans::route('/'),
-            'edit' => Pages\EditPerbaikan::route('/{record}/edit'),
+            // 'edit' => Pages\EditPerbaikan::route('/{record}/edit'),
         ];
     }
 }
