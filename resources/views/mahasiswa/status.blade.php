@@ -708,11 +708,26 @@
                 </p>
             </div>
             @endif
-            <div class="result-item">
+            <div class="result-item" style="grid-column: 1/-1;">
                 <label>Deskripsi</label>
                 <p style="font-weight:400;color:var(--muted);font-size:12px;">{{ $laporan->catatan_lpr }}</p>
             </div>
         </div>
+
+        {{-- Alasan Ditolak / Dikembalikan --}}
+        @if($laporan->approval === 'ditolak' && $laporan->alasan_penolakan)
+        <div style="background:var(--danger-bg);border:1.5px solid var(--danger);border-radius:10px;padding:14px 16px;margin-top:12px;">
+            <p style="font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">❌ Alasan Penolakan Laporan</p>
+            <p style="font-size:13px;color:var(--text);">{{ $laporan->alasan_penolakan }}</p>
+        </div>
+        @endif
+
+        @if($laporan->perbaikan && $laporan->perbaikan->app_validasi === 'dikembalikan' && $laporan->perbaikan->alasan_penolakan)
+        <div style="background:var(--danger-bg);border:1.5px solid var(--danger);border-radius:10px;padding:14px 16px;margin-top:12px;">
+            <p style="font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">🔄 Alasan Perbaikan Dikembalikan</p>
+            <p style="font-size:13px;color:var(--text);">{{ $laporan->perbaikan->alasan_penolakan }}</p>
+        </div>
+        @endif
 
         {{-- Riwayat perbaikan --}}
         @if($laporan->perbaikan && $laporan->perbaikan->riwayatPerbaikans->count() > 0)
@@ -785,7 +800,7 @@
                     <th>Kategori</th>
                     <th>Keluhan</th>
                     <th>Approval</th>
-                    <th>Perbaikan</th>
+                    <th>Status Perbaikan</th>
                 </tr>
             </thead>
             <tbody>
@@ -807,15 +822,27 @@
                             <span class="badge-dot"></span>
                             {{ ucfirst($lpr->approval) }}
                         </span>
+                        @if($lpr->approval === 'ditolak' && $lpr->alasan_penolakan)
+                        <div style="font-size:11px;color:var(--danger);margin-top:4px;max-width:200px;">{{ Str::limit($lpr->alasan_penolakan, 50) }}</div>
+                        @endif
                     </td>
                     <td>
-                        @if($lpr->perbaikan)
-                            <span class="badge badge-{{ str_replace('_', '', $lpr->perbaikan->status_perbaikan) }}">
-                                <span class="badge-dot"></span>
-                                {{ str_replace('_', ' ', ucfirst($lpr->perbaikan->status_perbaikan)) }}
-                            </span>
-                        @else
-                            <span style="color:var(--muted);font-size:12px;">—</span>
+                        @if($lpr->approval === 'ditolak')
+                            <span style="color:var(--danger);font-size:12px;">Laporan ditolak</span>
+                        @elseif($lpr->perbaikan)
+                            <div>
+                                <span class="badge badge-{{ str_replace('_', '', $lpr->perbaikan->status_perbaikan) }}">
+                                    <span class="badge-dot"></span>
+                                    {{ str_replace('_', ' ', ucfirst($lpr->perbaikan->status_perbaikan)) }}
+                                </span>
+                                @if($lpr->perbaikan->app_validasi === 'dikembalikan' && $lpr->perbaikan->alasan_penolakan)
+                                <div style="font-size:11px;color:var(--danger);margin-top:4px;max-width:200px;">{{ Str::limit($lpr->perbaikan->alasan_penolakan, 50) }}</div>
+                                @endif
+                            </div>
+                        @elseif($lpr->approval === 'menunggu')
+                            <span style="color:var(--muted);font-size:12px;">Menunggu approval</span>
+                        @elseif($lpr->approval === 'disetujui')
+                            <span style="color:var(--muted);font-size:12px;">Menunggu proses</span>
                         @endif
                     </td>
                 </tr>

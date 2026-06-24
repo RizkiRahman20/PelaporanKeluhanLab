@@ -172,8 +172,10 @@ class MahasiswaLaporanController extends Controller
                 'lab'              => $laporan->penugasan?->lab?->nm_lab ?? $laporan->lab?->nm_lab,
                 'kategori'         => $laporan->kategori,
                 'approval'         => $laporan->approval,
+                'alasan_penolakan' => $laporan->alasan_penolakan,
                 'status_perbaikan' => $laporan->perbaikan?->status_perbaikan,
                 'app_validasi'     => $laporan->perbaikan?->app_validasi,
+                'perbaikan_alasan_penolakan' => $laporan->perbaikan?->alasan_penolakan,
             ]);
         }
 
